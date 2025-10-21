@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: service-discovery
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+server:
+  port: 8761
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.pad.discovery: INFO
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/service-discovery.log
+    max-size: 10MB
+    max-history: 30
+
+discovery:
+  health-check:
+    interval: 30000  # 30 seconds
+    timeout: 5000    # 5 seconds
+    heartbeat-timeout: 90000  # 90 seconds
+  circuit-breaker:
+    failure-threshold: 3
+    window-multiplier: 3.5
+  load-threshold: 80.0
+
+notification:
+  api-url: http://gateway:8000/api/v1/notifications/discord/dm-by-email
+  recipient-email: tudorgavriliuc.2018@gmail.com
+  enabled: true
+
