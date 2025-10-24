@@ -50,7 +50,8 @@ discovery:
   load-threshold: 80.0
 
 notification:
-  api-url: http://gateway:8000/api/v1/notifications/discord/dm-by-email
-  recipient-email: tudorgavriliuc.2018@gmail.com
+  telegram:
+    bot-token: ${TELEGRAM_BOT_TOKEN:your-bot-token-here}
+    chat-id: ${TELEGRAM_CHAT_ID:your-chat-id-here}
   enabled: true
 

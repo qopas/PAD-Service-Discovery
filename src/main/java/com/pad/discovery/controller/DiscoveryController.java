@@ -3,6 +3,7 @@ package com.pad.discovery.controller;
 import com.pad.discovery.dto.ApiResponse;
 import com.pad.discovery.dto.HeartbeatRequest;
 import com.pad.discovery.dto.RegisterRequest;
+import com.pad.discovery.model.HeartbeatMode;
 import com.pad.discovery.model.ServiceInstance;
 import com.pad.discovery.service.LogService;
 import com.pad.discovery.service.RegistryService;
@@ -53,6 +54,7 @@ public class DiscoveryController {
                 .instanceId(request.getInstanceId())
                 .currentLoad(request.getCurrentLoad() != null ? request.getCurrentLoad() : 0.0)
                 .requestCount(request.getRequestCount() != null ? request.getRequestCount() : 0)
+                .heartbeatMode(request.getHeartbeatMode() != null ? request.getHeartbeatMode() : HeartbeatMode.OPTIONAL)
                 .build();
         
         ServiceInstance registered = registryService.register(instance);

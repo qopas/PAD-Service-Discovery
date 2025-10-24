@@ -52,6 +52,8 @@ public class ServiceInstance {
      * Number of requests currently being processed
      */
     private Integer requestCount;
+
+    private HeartbeatMode heartbeatMode = HeartbeatMode.OPTIONAL;
     
     /**
      * Enum representing the health status of a service instance
