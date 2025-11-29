@@ -52,6 +52,13 @@ public class ServiceInstance {
      * Number of requests currently being processed
      */
     private Integer requestCount;
+
+    private HeartbeatMode heartbeatMode = HeartbeatMode.OPTIONAL;
+    
+    /**
+     * List of topics this service is interested in (for pub/sub)
+     */
+    private java.util.List<String> interestedTopics;
     
     /**
      * Enum representing the health status of a service instance
