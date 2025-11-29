@@ -213,5 +213,65 @@ public class RegistryService {
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
     }
+    
+    /**
+     * Add a topic to a service instance's interested topics
+     * 
+     * @param instanceId Unique identifier of the instance
+     * @param topic Topic name to add
+     * @return true if instance was found and topic added, false otherwise
+     */
+    public boolean addTopicToInstance(String instanceId, String topic) {
+        log.info("Adding topic '{}' to instance: {}", topic, instanceId);
+        
+        ServiceInstance instance = getInstanceById(instanceId);
+        if (instance != null) {
+            if (instance.getInterestedTopics() == null) {
+                instance.setInterestedTopics(new ArrayList<>());
+            }
+            
+            if (!instance.getInterestedTopics().contains(topic)) {
+                instance.getInterestedTopics().add(topic);
+                log.info("Topic '{}' added to instance '{}'. Total topics: {}", 
+                        topic, instanceId, instance.getInterestedTopics().size());
+                return true;
+            } else {
+                log.debug("Topic '{}' already exists for instance '{}'", topic, instanceId);
+                return true;
+            }
+        }
+        
+        log.warn("Instance not found: {}", instanceId);
+        return false;
+    }
+    
+    /**
+     * Remove a topic from a service instance's interested topics
+     * 
+     * @param instanceId Unique identifier of the instance
+     * @param topic Topic name to remove
+     * @return true if instance was found and topic removed, false otherwise
+     */
+    public boolean removeTopicFromInstance(String instanceId, String topic) {
+        log.info("Removing topic '{}' from instance: {}", topic, instanceId);
+        
+        ServiceInstance instance = getInstanceById(instanceId);
+        if (instance != null) {
+            if (instance.getInterestedTopics() != null) {
+                boolean removed = instance.getInterestedTopics().remove(topic);
+                if (removed) {
+                    log.info("Topic '{}' removed from instance '{}'. Remaining topics: {}", 
+                            topic, instanceId, instance.getInterestedTopics().size());
+                } else {
+                    log.debug("Topic '{}' not found for instance '{}'", topic, instanceId);
+                }
+                return true;
+            }
+            return true;
+        }
+        
+        log.warn("Instance not found: {}", instanceId);
+        return false;
+    }
 }
 

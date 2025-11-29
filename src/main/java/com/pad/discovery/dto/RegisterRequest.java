@@ -1,7 +1,7 @@
 package com.pad.discovery.dto;
 
+import com.pad.discovery.model.HeartbeatMode;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,5 +26,11 @@ public class RegisterRequest {
     private Double currentLoad;
     
     private Integer requestCount;
+    private HeartbeatMode heartbeatMode;
+    
+    /**
+     * List of topics this service is interested in (for pub/sub)
+     */
+    private java.util.List<String> interestedTopics;
 }
 
