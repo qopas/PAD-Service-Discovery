@@ -27,5 +27,10 @@ public class RegisterRequest {
     
     private Integer requestCount;
     private HeartbeatMode heartbeatMode;
+    
+    /**
+     * List of topics this service is interested in (for pub/sub)
+     */
+    private java.util.List<String> interestedTopics;
 }
 

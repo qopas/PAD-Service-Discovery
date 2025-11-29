@@ -55,6 +55,7 @@ public class DiscoveryController {
                 .currentLoad(request.getCurrentLoad() != null ? request.getCurrentLoad() : 0.0)
                 .requestCount(request.getRequestCount() != null ? request.getRequestCount() : 0)
                 .heartbeatMode(request.getHeartbeatMode() != null ? request.getHeartbeatMode() : HeartbeatMode.OPTIONAL)
+                .interestedTopics(request.getInterestedTopics() != null ? request.getInterestedTopics() : new java.util.ArrayList<>())
                 .build();
         
         ServiceInstance registered = registryService.register(instance);
@@ -286,6 +287,123 @@ public class DiscoveryController {
                 "requestCount", 0,
                 "timestamp", LocalDateTime.now()
         ));
+    }
+    
+    /**
+     * Get all topics and their subscribers.
+     * 
+     * GET /api/discovery/topics
+     * 
+     * @return Map of topics to list of service names interested in them
+     */
+    @GetMapping("/topics")
+    public ResponseEntity<ApiResponse<Map<String, List<String>>>> getAllTopics() {
+        log.debug("Received request to get all topics");
+        
+        Map<String, List<String>> topicToServices = new java.util.HashMap<>();
+        
+        // Iterate through all service instances and build topic map
+        registryService.getAllInstances().forEach(instance -> {
+            if (instance.getInterestedTopics() != null) {
+                instance.getInterestedTopics().forEach(topic -> {
+                    topicToServices.computeIfAbsent(topic, k -> new java.util.ArrayList<>())
+                            .add(instance.getServiceName());
+                });
+            }
+        });
+        
+        return ResponseEntity.ok(ApiResponse.success(
+                topicToServices,
+                String.format("Found %d topic(s)", topicToServices.size())
+        ));
+    }
+    
+    /**
+     * Get all services interested in a specific topic.
+     * 
+     * GET /api/discovery/topics/{topic}/subscribers
+     * 
+     * @param topic Topic name
+     * @return List of service names interested in this topic
+     */
+    @GetMapping("/topics/{topic}/subscribers")
+    public ResponseEntity<ApiResponse<List<String>>> getTopicSubscribers(@PathVariable String topic) {
+        log.debug("Received request to get subscribers for topic: {}", topic);
+        
+        List<String> subscribers = registryService.getAllInstances().stream()
+                .filter(instance -> instance.getInterestedTopics() != null && 
+                                  instance.getInterestedTopics().contains(topic))
+                .map(ServiceInstance::getServiceName)
+                .distinct()
+                .collect(java.util.stream.Collectors.toList());
+        
+        return ResponseEntity.ok(ApiResponse.success(
+                subscribers,
+                String.format("Found %d subscriber(s) for topic: %s", subscribers.size(), topic)
+        ));
+    }
+    
+    /**
+     * Add a topic to a service's interested topics.
+     * 
+     * POST /api/discovery/services/{instanceId}/topics
+     * 
+     * @param instanceId Instance ID
+     * @param topicRequest Request body with topic name
+     * @return Success or error response
+     */
+    @PostMapping("/services/{instanceId}/topics")
+    public ResponseEntity<ApiResponse<Void>> addTopic(
+            @PathVariable String instanceId,
+            @RequestBody Map<String, String> topicRequest) {
+        
+        String topic = topicRequest.get("topic");
+        if (topic == null || topic.isBlank()) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(ApiResponse.error("Topic name is required"));
+        }
+        
+        log.info("Adding topic {} to instance: {}", topic, instanceId);
+        
+        boolean added = registryService.addTopicToInstance(instanceId, topic);
+        
+        if (added) {
+            return ResponseEntity.ok(ApiResponse.success(null, 
+                    String.format("Topic '%s' added to instance '%s'", topic, instanceId)));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Service instance not found: " + instanceId));
+        }
+    }
+    
+    /**
+     * Remove a topic from a service's interested topics.
+     * 
+     * DELETE /api/discovery/services/{instanceId}/topics/{topic}
+     * 
+     * @param instanceId Instance ID
+     * @param topic Topic name
+     * @return Success or error response
+     */
+    @DeleteMapping("/services/{instanceId}/topics/{topic}")
+    public ResponseEntity<ApiResponse<Void>> removeTopic(
+            @PathVariable String instanceId,
+            @PathVariable String topic) {
+        
+        log.info("Removing topic {} from instance: {}", topic, instanceId);
+        
+        boolean removed = registryService.removeTopicFromInstance(instanceId, topic);
+        
+        if (removed) {
+            return ResponseEntity.ok(ApiResponse.success(null,
+                    String.format("Topic '%s' removed from instance '%s'", topic, instanceId)));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Service instance not found: " + instanceId));
+        }
     }
 }
 
